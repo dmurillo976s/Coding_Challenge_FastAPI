@@ -81,12 +81,12 @@ async def read_team_members(team_id: str = Path(...)):
 
 
 @app.post("/teams/{team_id}/members", response_model=List[BaseUser])
-async def add_user_to_team(user_id: str = Body(...)):
+async def add_team_member(team_id: str = Path(...), user_id: str = Body(...)):
     return None
 
 
 @app.delete("/teams/{team_id}/members/{user_id}", response_model=List[BaseUser])
-async def delete_user_from_team(team_id: str = Path(...), user_id: str = Path(...)):
+async def delete_team_member(team_id: str = Path(...), user_id: str = Path(...)):
     return None
 
 
