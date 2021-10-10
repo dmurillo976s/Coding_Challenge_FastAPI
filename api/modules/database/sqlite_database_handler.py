@@ -1,12 +1,12 @@
 import aiosqlite
 
 from api.modules.data_classes import UpdateTeam, BaseTeam, UpdateUser, InUser
-from database_handler import DBHandler
-from config import CONFIG_SQLITE
-from utils import encrypt_string, generate_sql_update_set_formatted_string
+from .database_handler import DBHandler
+from .config import CONFIG_SQLITE
+from .utils import encrypt_string, generate_sql_update_set_formatted_string
 
 # Establish necessary connection configuration for SQLite db
-connection_config = CONFIG_SQLITE.production.db_file
+connection_config = CONFIG_SQLITE["production"]["db_file"]
 
 
 class SQLiteDBHandler(DBHandler):
@@ -20,7 +20,7 @@ class SQLiteDBHandler(DBHandler):
     # Overriding of __new__ method for implementing singleton pattern
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super().__new__()
+            cls._instance = super().__new__(cls)
 
         return cls._instance
 
@@ -29,9 +29,9 @@ class SQLiteDBHandler(DBHandler):
         Select a single row from users table in DB
 
         :param user_id: Id of user of interest
-        :return: Single list corresponding to the user record, uses format ["id", "name", "email"]
+        :return: Tuple corresponding to the user record, uses format ("id", "name", "email"), None if no record is found
         """
-        resulting_row = []
+        resulting_row = tuple()
         async with aiosqlite.connect(connection_config) as db:
             cursor = await db.execute('SELECT id, name, email FROM users WHERE id=:id', {"id": user_id})
             resulting_row = await cursor.fetchone()
@@ -44,7 +44,7 @@ class SQLiteDBHandler(DBHandler):
         """
         Select all rows from users table in DB
 
-        :return: A list corresponding to all user records, uses format [["id", "name", "email"],...]
+        :return: A list corresponding to all user records, uses format [("id", "name", "email"),...]
         """
         resulting_rows = []
         async with aiosqlite.connect(connection_config) as db:
@@ -60,9 +60,9 @@ class SQLiteDBHandler(DBHandler):
         Insert a new record to the users table in DB
 
         :param new_user: Pydantic model with the new user data
-        :return: Single list corresponding to inserted user record, uses format ["id", "name", "email"]
+        :return: Tuple corresponding to inserted user record, uses format ("id", "name", "email")
         """
-        inserted_row = []
+        inserted_row = tuple()
         new_user.password = encrypt_string(new_user.password)
 
         async with aiosqlite.connect(connection_config) as db:
@@ -78,9 +78,9 @@ class SQLiteDBHandler(DBHandler):
 
         :param user_id: Id of user of interest
         :param new_data: Pydantic model with the new user data
-        :return: Single list corresponding to updated user record, uses format ["id", "name", "email"]
+        :return: Tuple corresponding to updated user record, uses format ("id", "name", "email")
         """
-        updated_row = []
+        updated_row = tuple()
         if new_data.password:
             new_data.password = encrypt_string(new_data.password)
 
@@ -102,7 +102,7 @@ class SQLiteDBHandler(DBHandler):
         Also deletes all related records of the user in team_members table
 
         :param user_id: Id of user of interest
-        :return: Single list corresponding to deleted user record, uses format ["id", "name", "email"]
+        :return: Tuple corresponding to deleted user record, uses format ("id", "name", "email")
         """
         deleted_row = await self.select_user(user_id=user_id)
 
@@ -118,9 +118,9 @@ class SQLiteDBHandler(DBHandler):
         Select a single row from teams table in DB
 
         :param team_id: Id of team of interest
-        :return: Single list corresponding to the team record, uses format ["id", "name", "description"]
+        :return: Tuple corresponding to the team record, uses format ("id", "name", "description")
         """
-        resulting_row = []
+        resulting_row = tuple()
         async with aiosqlite.connect(connection_config) as db:
             cursor = await db.execute('SELECT * FROM teams WHERE id=:id', {"id": team_id})
             resulting_row = await cursor.fetchone()
@@ -133,7 +133,7 @@ class SQLiteDBHandler(DBHandler):
         """
         Select all rows from teams table in DB
 
-        :return: A list corresponding to all team records, uses format [["id", "name", "description"],...]
+        :return: A list corresponding to all team records, uses format [("id", "name", "description"),...]
         """
         resulting_rows = []
         async with aiosqlite.connect(connection_config) as db:
@@ -149,9 +149,9 @@ class SQLiteDBHandler(DBHandler):
         Insert a new record to the teams table in DB
 
         :param new_team: Pydantic model with the new team data
-        :return: Single list corresponding to inserted team record, uses format ["id", "name", "description"]
+        :return: Tuple corresponding to inserted team record, uses format ("id", "name", "description")
         """
-        inserted_row = []
+        inserted_row = tuple()
 
         async with aiosqlite.connect(connection_config) as db:
             await db.execute("INSERT INTO teams values (:id, :name, :description)", new_team.dict())
@@ -166,9 +166,9 @@ class SQLiteDBHandler(DBHandler):
 
         :param team_id: Id of team of interest
         :param new_data: Pydantic model with the new team data
-        :return: Single list corresponding to updated team record, uses format ["id", "name", "description"]
+        :return: Tuple corresponding to updated team record, uses format ("id", "name", "description")
         """
-        updated_row = []
+        updated_row = tuple()
 
         updated_values_dict = new_data.dict(exclude_unset=True)
 
@@ -188,7 +188,7 @@ class SQLiteDBHandler(DBHandler):
         Also deletes all related records of the team in team_members table
 
         :param team_id: Id of team of interest
-        :return: Single list corresponding to deleted team record, uses format ["id", "name", "description"]
+        :return: Tuple corresponding to deleted team record, uses format ("id", "name", "description")
         """
         deleted_row = await self.select_team(team_id=team_id)
 
@@ -204,12 +204,12 @@ class SQLiteDBHandler(DBHandler):
         Select all rows from teams where a user is a member
 
         :param user_id: Id of user of interest
-        :return: A list of all team records associated with a user, uses format [["id", "name", "description"],...]
+        :return: A list of all team records associated with a user, uses format [("id", "name", "description"),...]
         """
         resulting_rows = []
         async with aiosqlite.connect(connection_config) as db:
             cursor = await db.execute(('SELECT teams.id, teams.name, teams.description '
-                                       'FROM teams INNER JOIN team_members on teams.id = team_members.id_team'
+                                       'FROM teams INNER JOIN team_members on teams.id = team_members.id_team '
                                        'WHERE team_members.id_user = :id_user'), {"id_user": user_id})
             resulting_rows = await cursor.fetchall()
 
@@ -222,12 +222,12 @@ class SQLiteDBHandler(DBHandler):
         Select all rows from users that are members of a team
 
         :param team_id: Id of team of interest
-        :return: A list of all user records associated with a team, uses format [["id", "name", "email"],...]
+        :return: A list of all user records associated with a team, uses format [("id", "name", "email"),...]
         """
         resulting_rows = []
         async with aiosqlite.connect(connection_config) as db:
             cursor = await db.execute(('SELECT users.id, users.name, users.email '
-                                       'FROM users INNER JOIN team_members on users.id = team_members.id_user'
+                                       'FROM users INNER JOIN team_members on users.id = team_members.id_user '
                                        'WHERE team_members.id_team = :id_team'), {"id_team": team_id})
             resulting_rows = await cursor.fetchall()
 
@@ -241,15 +241,15 @@ class SQLiteDBHandler(DBHandler):
 
         :param team_id: Id of team of interest
         :param user_id: Id of user of interest
-        :return: Single list corresponding to the inserted team_member record, uses format ["id_team", "id_user"]
+        :return: Tuple corresponding to the inserted team_member record, uses format ("id_team", "id_user")
         """
-        inserted_row = []
+        inserted_row = tuple()
 
         async with aiosqlite.connect(connection_config) as db:
-            await db.execute("INSERT INTO team_members values (:id_team, :id_user)", {"id_team": team_id, "id_user": user_id})
+            await db.execute("INSERT INTO team_members values (:id_user, :id_team)", {"id_team": team_id, "id_user": user_id})
             await db.commit()
 
-            cursor = await db.execute(('SELECT id_team, id_user FROM team_members'
+            cursor = await db.execute(('SELECT id_team, id_user FROM team_members '
                                        'WHERE id_team = :id_team AND id_user = :id_user'),
                                       {"id_team": team_id, "id_user": user_id})
             inserted_row = await cursor.fetchone()
@@ -263,12 +263,12 @@ class SQLiteDBHandler(DBHandler):
 
         :param team_id: Id of team of interest
         :param user_id: Id of user of interest
-        :return: Single list corresponding to deleted team_member record, uses format ["id_team", "id_user"]
+        :return: Tuple corresponding to deleted team_member record, uses format ("id_team", "id_user")
         """
-        deleted_row = []
+        deleted_row = tuple()
 
         async with aiosqlite.connect(connection_config) as db:
-            cursor = await db.execute(('SELECT id_team, id_user FROM team_members'
+            cursor = await db.execute(('SELECT id_team, id_user FROM team_members '
                                        'WHERE id_team = :id_team AND id_user = :id_user'),
                                       {"id_team": team_id, "id_user": user_id})
             deleted_row = await cursor.fetchone()

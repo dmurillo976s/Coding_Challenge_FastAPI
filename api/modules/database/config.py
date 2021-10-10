@@ -7,6 +7,6 @@ CONFIG_SQLITE = {
         "db_file": "MainDB.db"
     },
     "test": {
-        "db_file": "TestDB.db"
+        "db_file": "tests/database/TempDB.db"
     }
 }
