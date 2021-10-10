@@ -10,58 +10,58 @@ class DBHandler(ABC):
     """
 
     @abstractmethod
-    def select_user(self, user_id: str):
+    async def select_user(self, user_id: str):
         pass
 
     @abstractmethod
-    def select_users(self):
+    async def select_users(self):
         pass
 
     @abstractmethod
-    def insert_user(self, new_user: InUser):
+    async def insert_user(self, new_user: InUser):
         pass
 
     @abstractmethod
-    def update_user(self, user_id: str, new_data: UpdateUser):
+    async def update_user(self, user_id: str, new_data: UpdateUser):
         pass
 
     @abstractmethod
-    def delete_user(self, user_id: str):
+    async def delete_user(self, user_id: str):
         pass
 
     @abstractmethod
-    def select_team(self, team_id: str):
+    async def select_team(self, team_id: str):
         pass
 
     @abstractmethod
-    def select_teams(self):
+    async def select_teams(self):
         pass
 
     @abstractmethod
-    def insert_team(self, new_user: BaseTeam):
+    async def insert_team(self, new_user: BaseTeam):
         pass
 
     @abstractmethod
-    def update_team(self, team_id: str, new_data: UpdateTeam):
+    async def update_team(self, team_id: str, new_data: UpdateTeam):
         pass
 
     @abstractmethod
-    def delete_team(self, team_id: str):
+    async def delete_team(self, team_id: str):
         pass
 
     @abstractmethod
-    def select_user_teams(self, user_id: str):
+    async def select_user_teams(self, user_id: str):
         pass
 
     @abstractmethod
-    def select_team_members(self, team_id: str):
+    async def select_team_members(self, team_id: str):
         pass
 
     @abstractmethod
-    def insert_team_member(self, team_id: str, user_id: str):
+    async def insert_team_member(self, team_id: str, user_id: str):
         pass
 
     @abstractmethod
-    def delete_team_member(self, team_id: str, user_id: str):
+    async def delete_team_member(self, team_id: str, user_id: str):
         pass
 
