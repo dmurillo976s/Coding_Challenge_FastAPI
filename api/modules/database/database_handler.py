@@ -65,3 +65,13 @@ class DBHandler(ABC):
     async def delete_team_member(self, team_id: str, user_id: str):
         pass
 
+
+class DBHandlerException(Exception):
+    """
+    Base class for DBHandler exceptions. Classes that inherit from DBHandler
+    class should throw a version of this class for managing the
+    database-integrity-related exceptions thrown by the specific implementations of DB APIs
+    in a normalized way
+    """
+    pass
+

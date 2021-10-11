@@ -1,7 +1,6 @@
 import pytest
-import sys
 import aiosqlite
-from httpx import AsyncClient
+
 from api.modules.database.config import CONFIG_SQLITE
 from api.modules.database import sqlite_database_handler
 from api.modules.database.sqlite_database_handler import SQLiteDBHandler

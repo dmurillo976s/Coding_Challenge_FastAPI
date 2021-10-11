@@ -1,7 +1,8 @@
 import aiosqlite
 
+from aiosqlite import IntegrityError
 from api.modules.data_classes import UpdateTeam, BaseTeam, UpdateUser, InUser
-from .database_handler import DBHandler
+from .database_handler import DBHandler, DBHandlerException
 from .config import CONFIG_SQLITE
 from .utils import encrypt_string, generate_sql_update_set_formatted_string
 
@@ -66,8 +67,11 @@ class SQLiteDBHandler(DBHandler):
         new_user.password = encrypt_string(new_user.password)
 
         async with aiosqlite.connect(connection_config) as db:
-            await db.execute("INSERT INTO users values (:id, :name, :email, :password)", new_user.dict())
-            await db.commit()
+            try:
+                await db.execute("INSERT INTO users values (:id, :name, :email, :password)", new_user.dict())
+                await db.commit()
+            except IntegrityError as e:
+                raise DBHandlerException()
 
         inserted_row = await self.select_user(user_id=new_user.id)
         return inserted_row
@@ -90,8 +94,11 @@ class SQLiteDBHandler(DBHandler):
         updated_values_dict["id"] = user_id
 
         async with aiosqlite.connect(connection_config) as db:
-            await db.execute(f"UPDATE users SET {set_query} WHERE id = :id", updated_values_dict)
-            await db.commit()
+            try:
+                await db.execute(f"UPDATE users SET {set_query} WHERE id = :id", updated_values_dict)
+                await db.commit()
+            except IntegrityError as e:
+                raise DBHandlerException()
 
         updated_row = await self.select_user(user_id=user_id)
         return updated_row
@@ -154,8 +161,11 @@ class SQLiteDBHandler(DBHandler):
         inserted_row = tuple()
 
         async with aiosqlite.connect(connection_config) as db:
-            await db.execute("INSERT INTO teams values (:id, :name, :description)", new_team.dict())
-            await db.commit()
+            try:
+                await db.execute("INSERT INTO teams values (:id, :name, :description)", new_team.dict())
+                await db.commit()
+            except IntegrityError as e:
+                raise DBHandlerException()
 
         inserted_row = await self.select_team(team_id=new_team.id)
         return inserted_row
@@ -176,8 +186,11 @@ class SQLiteDBHandler(DBHandler):
         updated_values_dict["id"] = team_id
 
         async with aiosqlite.connect(connection_config) as db:
-            await db.execute(f"UPDATE teams SET {set_query} WHERE id = :id", updated_values_dict)
-            await db.commit()
+            try:
+                await db.execute(f"UPDATE teams SET {set_query} WHERE id = :id", updated_values_dict)
+                await db.commit()
+            except IntegrityError as e:
+                raise DBHandlerException()
 
         updated_row = await self.select_team(team_id=team_id)
         return updated_row
@@ -246,8 +259,12 @@ class SQLiteDBHandler(DBHandler):
         inserted_row = tuple()
 
         async with aiosqlite.connect(connection_config) as db:
-            await db.execute("INSERT INTO team_members values (:id_user, :id_team)", {"id_team": team_id, "id_user": user_id})
-            await db.commit()
+            try:
+                await db.execute("INSERT INTO team_members values (:id_user, :id_team)",
+                                 {"id_team": team_id, "id_user": user_id})
+                await db.commit()
+            except IntegrityError as e:
+                raise DBHandlerException()
 
             cursor = await db.execute(('SELECT id_team, id_user FROM team_members '
                                        'WHERE id_team = :id_team AND id_user = :id_user'),
@@ -280,3 +297,5 @@ class SQLiteDBHandler(DBHandler):
             await db.commit()
 
         return deleted_row
+
+
