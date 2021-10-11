@@ -4,7 +4,7 @@
 
 CONFIG_SQLITE = {
     "production": {
-        "db_file": "MainDB.db"
+        "db_file": "database/MainDB.db"
     },
     "test": {
         "db_file": "tests/database/TempDB.db"

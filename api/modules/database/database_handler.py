@@ -38,7 +38,7 @@ class DBHandler(ABC):
         pass
 
     @abstractmethod
-    async def insert_team(self, new_user: BaseTeam):
+    async def insert_team(self, new_team: BaseTeam):
         pass
 
     @abstractmethod
